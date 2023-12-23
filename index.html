@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bsv@1.5.0/bsv-message.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bsv@1.5.0/bsv-mnemonic.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bsv@1.5.0/bsv-ecies.min.js"></script>
-    <!-- twitter -->
+
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@codenlighten1" />
     <meta name="twitter:creator" content="@codenlighten1" />
@@ -72,13 +72,21 @@
       <!-- number of outputs -->
       <label for=""> Number of outputs</label>
       <input type="number" id="outputNum" />
+      <!-- add one sat to outputs ? checkbox -->
+      <label for=""> Add one sat to outputs?</label>
+      <input type="checkbox" id="addOneSat" />
       <button id="sendBSVButton">Send</button>
     </div>
     <div class="container" id="results">
       <h1>Results</h1>
       <p id="resultsText"></p>
     </div>
+
     <script>
+      // const Mnemonic = bsv.Mnemonic;
+      // const mnemonicWords = Mnemonic.Words.ENGLISH;
+      // const mnemonic = new Mnemonic(mnemonicWords);
+      // console.log(mnemonic.toString());
       const Buffer = bsv.deps.Buffer;
       const generateKeys = () => {
         if (address && !confirm("Generate new keys?")) {
@@ -166,7 +174,8 @@
         address,
         amount,
         message,
-        numOutputs
+        numOutputs,
+        addOneSat = false
       ) => {
         try {
           const privateKey = bsv.PrivateKey.fromWIF(privateKeyWIF);
@@ -177,15 +186,44 @@
           const tx = new bsv.Transaction().from(utxos);
           tx.feePerKb(15);
           // tx.feePerKb(10);
-          for (let i = 0; i < numOutputs; i++) {
-            tx.addOutput(
-              new bsv.Transaction.Output({
-                script: bsv.Script.buildSafeDataOut([
-                  Buffer.from(message + "" + i).toString("utf8"),
-                ]),
-                satoshis: 0,
-              })
-            );
+          //p2pkh locking script
+          const lockingScript = bsv.Script.empty();
+          //p2pkh unlocking script
+          lockingScript
+            .add(bsv.Opcode.OP_DUP)
+            .add(bsv.Opcode.OP_HASH160)
+            .add(bsv.Script.buildPublicKeyHashOut(fromAddress).toBuffer())
+            .add(bsv.Opcode.OP_EQUALVERIFY)
+            .add(bsv.Opcode.OP_CHECKSIG)
+            .add(bsv.Opcode.OP_FALSE)
+            .add(bsv.Opcode.OP_IF)
+            .add(Buffer.from("ord")) // Automatically handles length and data
+            .add(bsv.Opcode.OP_1)
+            .add(Buffer.from("text/plain")) // Automatically handles length and data
+            .add(bsv.Opcode.OP_0)
+            .add(Buffer.from(message)); // Automatically handles length and data
+
+          if (!addOneSat) {
+            for (let i = 0; i < numOutputs; i++) {
+              tx.addOutput(
+                new bsv.Transaction.Output({
+                  script: bsv.Script.buildSafeDataOut([
+                    Buffer.from(message + "" + i).toString("utf8"),
+                  ]),
+                  satoshis: 0,
+                })
+              );
+            }
+          } else {
+            for (let i = 0; i < numOutputs; i++) {
+              tx.addOutput(
+                new bsv.Transaction.Output({
+                  //locking script
+                  script: lockingScript,
+                  satoshis: 1,
+                })
+              );
+            }
           }
           tx.to(toAddress, parseInt(amount));
           tx.change(fromAddress);
@@ -294,7 +332,9 @@
           const amount = document.getElementById("sendAmount").value;
           const message = document.getElementById("message").value;
           const numOutputs = document.getElementById("outputNum").value;
+          const addOneSat = document.getElementById("addOneSat").checked;
           const keys = JSON.parse(localStorage.getItem("keys"));
+
           const { privateKey } = keys;
           try {
             const txid = await sendBSV(
@@ -302,7 +342,8 @@
               address,
               amount,
               message,
-              numOutputs
+              numOutputs,
+              addOneSat
             );
 
             document.getElementById(

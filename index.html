@@ -34,72 +34,21 @@
         border: 1px solid black;
         word-wrap: break-word;
       }
-      #header {
-        cursor: pointer;
-      }
-      #resultsText {
-        word-break: break-all;
-      }
       #results {
         display: none;
       }
 
-      #sendBSV input {
-        margin: 5px;
-      }
-
-      #sendBSV button {
-        margin: 5px;
-      }
-
-      #sendBSV label {
-        margin: 5px;
-      }
-
-      #sendBSV {
-        display: flex;
-        flex-direction: column;
-      }
-
-      #importMnemonic {
-        display: flex;
-        flex-direction: column;
-      }
-
-      #importMnemonic input {
-        margin: 5px;
-      }
-
-      #importMnemonic button {
-        margin: 5px;
-      }
-
-      #importMnemonic label {
-        margin: 5px;
-      }
-
-      #addOneSat {
-        margin: 5px;
+      #resultsText {
+        word-wrap: break-word;
       }
       label {
-        margin: 5px;
+        display: block;
       }
-
-      #outputNum {
-        margin: 5px;
+      #sendBSV input {
+        margin-bottom: 10px;
       }
-
-      #keys {
-        display: flex;
-        flex-direction: column;
-      }
-
-      #keys button {
-        margin: 5px;
-      }
-
-      #keys p {
-        margin: 5px;
+      #sendBSV button {
+        margin-top: 10px;
       }
     </style>
   </head>
@@ -127,13 +76,14 @@
     </div>
     <div class="container" id="sendBSV">
       <h1>Send BSV</h1>
+      <label for="">Address</label>
       <input id="sendAddress" placeholder="address" type="text" />
+      <label for="">Amount</label>
       <input id="sendAmount" placeholder="amount" type="text" />
+      <label for="">Message</label>
       <input placeholder="message" type="text" id="message" />
-      <!-- number of outputs -->
       <label for=""> Number of outputs</label>
       <input type="number" id="outputNum" />
-      <!-- add one sat to outputs ? checkbox -->
       <label for=""> Add one sat to outputs?</label>
       <input type="checkbox" id="addOneSat" />
       <button id="sendBSVButton">Send</button>
